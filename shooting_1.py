@@ -3,12 +3,12 @@ import sys
 import random
 from tkinter import messagebox
 
-img_bg = pygame.image.load("bg_space.png") #背景画像
-img_chara = [pygame.image.load("ch_bird_1.png"), #主人公の画像
-             pygame.image.load("ch_bird_2.png"),
-             pygame.image.load("ch_bird_died.png")
+img_bg = pygame.image.load("img\\bg_space.png") #背景画像
+img_chara = [pygame.image.load("img\ch_bird_1.png"), #主人公の画像
+             pygame.image.load("img\ch_bird_2.png"),
+             pygame.image.load("img\ch_bird_died.png")
              ]
-img_tama = pygame.image.load("tama.png") #弾の画像
+img_tama = pygame.image.load("img\\tama.png") #弾の画像
 
 def main():
     pygame.init() #初期化
