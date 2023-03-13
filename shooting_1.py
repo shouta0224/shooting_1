@@ -44,9 +44,11 @@ bs_x = 0
 bs_y = 0
 BS_UGOKUHINDO = 2  # 2
 bs_hp = 0
+bs_hp_max = 0
 bs_fight = 0
 level = 0
 ii = 0
+MAX_LEVEL = 2
 
 
 def control():  # 主人公の操作
@@ -185,10 +187,11 @@ class Boss:
         self.sy = size_y
 
     def rdy(self):  # ボスの準備
-        global bs_x, bs_y, bs_hp
+        global bs_x, bs_y, bs_hp, bs_hp_max
         bs_x = 640 - (self.sx / 2)
         bs_y = -self.sy + ((self.sy / 30) * ii)
         bs_hp = self.hp
+        bs_hp_max = self.hp
         screen.blit(img_boss[self.id - 1], [bs_x, bs_y])
 
     def gekiha(self):
@@ -221,7 +224,7 @@ def main():
     global TA_MAX, ta_x, ta_y, ka_kazu, TA_SPD, ta_kakuritsu, ta_num
     global ta_2_x, ta_2_y, TA_2_KAZU, ta_utsu
     global gmov, msbx, ATARIHANTEI_X, ATARIHANTEI_Y
-    global bs_x, bs_y, bs_fight, bs_hp
+    global bs_x, bs_y, bs_fight, bs_hp, bs_hp_max
     pygame.init()  # 初期化
     pygame.display.set_caption("シューティング")  # Windowのタイトル
     clock = pygame.time.Clock()  # clockオブジェクト
@@ -253,6 +256,7 @@ def main():
             bs_fight = 0
             control()
             screen.blit(img_bg, [0, 0])  # 背景描画
+            bs_hp = 0
 
             if tmr % 30 < 15:  # 主人公描画 15フレーム(0.5秒)ごとにアニメーション
                 screen.blit(img_chara[0], [ch_x, ch_y])
@@ -272,7 +276,9 @@ def main():
             screen.blit(img_danmaku, [ta_x[gmov], ta_y[gmov]])  # 描画
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
             screen.blit(txt_ch_hp, [10, 910])
-            bs_hp = 0
+            if bs_hp != 0:
+                txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
+                screen.blit(txt_bs_hp, [10, 10])
             if msbx == 0:
                 msbx = 1
             elif msbx == 1:
@@ -293,8 +299,8 @@ def main():
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
             screen.blit(txt_ch_hp, [10, 910])
-
-            boss = Boss(level, 10, 300, 200)
+            if level == 1:
+                boss = Boss(level, 80, 300, 200)
             ii = 0
             boss.rdy()
             idx = 4
@@ -314,6 +320,8 @@ def main():
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
             screen.blit(txt_ch_hp, [10, 910])
+            txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
+            screen.blit(txt_bs_hp, [10, -30+(ii*1.3)])
 
             ii = ii + 1
             boss.rdy()
@@ -335,6 +343,8 @@ def main():
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
             screen.blit(txt_ch_hp, [10, 910])
+            txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
+            screen.blit(txt_bs_hp, [10, 10])
             if bs_hp <= 0:
                 boss.gekiha()
                 idx = 6
@@ -352,6 +362,26 @@ def main():
             screen.blit(txt_ch_hp, [10, 910])
             ii = 0
             idx = 1
+            if level == MAX_LEVEL:
+                idx = 7
+            else:
+                level = level + 1
+                ch_hp = ch_hp_max
+                pygame.mixer.init()
+                se_gekiha = pygame.mixer.Sound("se\heel.ogg")
+                se_gekiha.play()
+
+        elif idx == 7: # クリア
+            screen.blit(img_bg, [0, 0])  # 背景描画
+            screen.blit(img_chara[0], [ch_x, ch_y])  # 描画
+            txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
+            screen.blit(txt_ch_hp, [10, 910])
+            bs_hp = 0
+            if msbx == 0:
+                msbx = 1
+            elif msbx == 1:
+                msbx = 2
+                messagebox.showinfo("クリア！", "ゲームをクリアしました。スペースキーまたはエンターキーでもう一回プレイできます。")
 
         pygame.display.update()
         clock.tick(30)
