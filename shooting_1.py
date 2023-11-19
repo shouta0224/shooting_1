@@ -50,7 +50,6 @@ level = 0
 ii = 0
 MAX_LEVEL = 2
 
-
 def control():  # 主人公の操作
     global ch_x, ch_y, ta_utsu
     key = pygame.key.get_pressed()

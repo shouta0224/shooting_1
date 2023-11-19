@@ -3,22 +3,25 @@ import sys
 import random
 import math
 from tkinter import messagebox
+import numpy as np
 
 screen = pygame.display.set_mode((1280, 960))  # スクリーン初期化 解像度設定
 
 WHITE = (255, 255, 255)
 
 img_bg = pygame.image.load("img\\bg_space.png")  # 背景画像
+img_tb = pygame.image.load("img\\textbox.png") # テキストボックス
 img_chara = [pygame.image.load("img\ch_bird_1.png"),  # 主人公の画像
              pygame.image.load("img\ch_bird_2.png"),
              pygame.image.load("img\ch_bird_died.png")
              ]
 img_tama = pygame.image.load("img\\tama.png")  # 弾の画像
 img_tama_2 = pygame.image.load("img\\tama_2.png")  # 弾の画像
-img_boss = [pygame.image.load("img\\boss_1.png")]
+img_boss = [pygame.image.load("img\\boss_1.png")] # ボスの画像
+img_speaker = [pygame.image.load("img\\sp_kari.png")] # テキストボックスのキャラ
 
 tmr = 0  # 時間管理変数
-idx = 0 # 0
+idx = 8 # 0
 ch_x = 565  # 主人公のX座標 初期化
 ch_y = 810  # 同じくY座標
 ch_hp_max = 10
@@ -49,9 +52,18 @@ bs_fight = 0
 level = 0
 ii = 0
 MAX_LEVEL = 2
-
 FONT_PATH = "fnt/ipaexg.ttf"
+sinario_num = 0
+is_press_enter = 0
 
+TXT_CHA = [ # テキストボックスシステムのキャラをまとめたリスト
+    ["テストキャラ", 0] # 左がキャラの名前。右がキャラの画像の番号。img_speakerに対応している。
+]
+
+SINARIO = [ # シナリオ。テキストファイルで管理できたらうれしい 
+    ["あいうえおかきくけこ", 0], # 左が喋る内容。右がキャラクターID。TXT_CHAに対応。
+    ["あかかかかｋ", 0]
+]
 
 def control():  # 主人公の操作
     global ch_x, ch_y, ta_utsu
@@ -82,7 +94,7 @@ def control():  # 主人公の操作
 
 
 def event():
-    global idx, ta_utsu
+    global idx, ta_utsu, is_press_enter
     pygame.event.pump()  # よくわからん。おまじないらしい。
     key = pygame.key.get_pressed()  # キーが押されているかを取得
     for event in pygame.event.get():  # WIndowのバツボタンが押されたとき
@@ -90,8 +102,12 @@ def event():
             pygame.quit()
             sys.exit()
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE:
                 idx = 0
+            if event.key == pygame.K_z or event.key == pygame.K_RETURN:
+                is_press_enter = 1
+            else:
+                is_press_enter = 0
 
 
 def tama(): # 敵の弾
@@ -227,6 +243,7 @@ def main():
     global ta_2_x, ta_2_y, TA_2_KAZU, ta_utsu
     global gmov, msbx, ATARIHANTEI_X, ATARIHANTEI_Y
     global bs_x, bs_y, bs_fight, bs_hp, bs_hp_max
+    global sinario_num, is_press_enter
     pygame.init()  # 初期化
     pygame.display.set_caption("シューティング")  # Windowのタイトル
     clock = pygame.time.Clock()  # clockオブジェクト
@@ -392,10 +409,16 @@ def main():
                 messagebox.showinfo("クリア！", "ゲームをクリアしました。スペースキーまたはエンターキーでもう一回プレイできます。")
         
         elif idx == 8: # テキストシステムテスト
+            if is_press_enter == 1:
+                sinario_num += 1
+            font = pygame.font.Font(FONT_PATH, 50)
             screen.blit(img_bg, [0, 0])
-            txt_ch_hp = font.render("あいうえお", True, WHITE)
-            screen.blit(txt_ch_hp, [10, 900])
-
+            screen.blit(img_tb, [60, 570])
+            screen.blit(img_speaker[TXT_CHA[SINARIO[sinario_num][1]][1]], [90, 660])
+            txt_name = font.render(TXT_CHA[SINARIO[sinario_num][1]][0], True, WHITE)
+            screen.blit(txt_name, [124, 579])
+            txt_main = font.render(SINARIO[sinario_num][0], True, WHITE)
+            screen.blit(txt_main, [340, 660])
         pygame.display.update()
         clock.tick(30)
 
