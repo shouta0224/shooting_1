@@ -18,7 +18,7 @@ img_tama_2 = pygame.image.load("img\\tama_2.png")  # 弾の画像
 img_boss = [pygame.image.load("img\\boss_1.png")]
 
 tmr = 0  # 時間管理変数
-idx = 0
+idx = 0 # 0
 ch_x = 565  # 主人公のX座標 初期化
 ch_y = 810  # 同じくY座標
 ch_hp_max = 10
@@ -49,6 +49,8 @@ bs_fight = 0
 level = 0
 ii = 0
 MAX_LEVEL = 2
+
+FONT_PATH = "fnt/ipaexg.ttf"
 
 
 def control():  # 主人公の操作
@@ -228,8 +230,7 @@ def main():
     pygame.init()  # 初期化
     pygame.display.set_caption("シューティング")  # Windowのタイトル
     clock = pygame.time.Clock()  # clockオブジェクト
-    font = pygame.font.Font(None, 60)
-    while True:
+    while True: 
         tmr = tmr + 1  # タイマー進める
         event()
         if idx == 0:  # 戦闘初期化
@@ -251,6 +252,7 @@ def main():
             ch_hp_max = 10
             ch_hp = ch_hp_max
         elif idx == 1:
+            font = pygame.font.Font(FONT_PATH, 60)
             ii = ii + 1
             ta_kakuritsu = 10
             bs_fight = 0
@@ -265,17 +267,18 @@ def main():
             tama()
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
-            screen.blit(txt_ch_hp, [10, 910])
+            screen.blit(txt_ch_hp, [10, 900])
             if ii >= 300:
                 idx = 3
 
         elif idx == 2:  # ゲームオーバー
+            font = pygame.font.Font(FONT_PATH, 60)
             screen.blit(img_bg, [0, 0])  # 背景描画
             screen.blit(img_chara[2], [ch_x, ch_y])
             img_danmaku = pygame.transform.rotozoom(img_tama, -90 - ta_kakudo[gmov], 1.0)
             screen.blit(img_danmaku, [ta_x[gmov], ta_y[gmov]])  # 描画
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
-            screen.blit(txt_ch_hp, [10, 910])
+            screen.blit(txt_ch_hp, [10, 900])
             if bs_hp != 0:
                 txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
                 screen.blit(txt_bs_hp, [10, 10])
@@ -286,6 +289,7 @@ def main():
                 messagebox.showinfo("ゲームオーバー！", "弾に当たってしまいました。スペースキーまたはエンターキーでもう一回プレイできます。")
 
         elif idx == 3:  # ボス準備
+            font = pygame.font.Font(FONT_PATH, 60)
             ta_kakuritsu = 0
             bs_fight = 0
             control()
@@ -298,7 +302,7 @@ def main():
             tama()
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
-            screen.blit(txt_ch_hp, [10, 910])
+            screen.blit(txt_ch_hp, [10, 900])
             if level == 1:
                 boss = Boss(level, 80, 300, 200)
             ii = 0
@@ -306,6 +310,7 @@ def main():
             idx = 4
 
         elif idx == 4:  # ボス出てくる
+            font = pygame.font.Font(FONT_PATH, 60)
             ta_kakuritsu = 0
             bs_fight = 0
             control()
@@ -319,7 +324,7 @@ def main():
             tama()
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
-            screen.blit(txt_ch_hp, [10, 910])
+            screen.blit(txt_ch_hp, [10, 900])
             txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
             screen.blit(txt_bs_hp, [10, -30+(ii*1.3)])
 
@@ -329,6 +334,7 @@ def main():
                 idx = 5
 
         elif idx == 5:  # ボスの攻撃！
+            font = pygame.font.Font(FONT_PATH, 60)
             ta_kakuritsu = 5
             screen.blit(img_bg, [0, 0])  # 背景描画
             bs_fight = 1
@@ -342,7 +348,7 @@ def main():
             tama()
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
-            screen.blit(txt_ch_hp, [10, 910])
+            screen.blit(txt_ch_hp, [10, 900])
             txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
             screen.blit(txt_bs_hp, [10, 10])
             if bs_hp <= 0:
@@ -350,6 +356,7 @@ def main():
                 idx = 6
 
         elif idx == 6:
+            font = pygame.font.Font(FONT_PATH, 60)
             control()
             if tmr % 30 < 15:  # 主人公描画 15フレーム(0.5秒)ごとにアニメーション
                 screen.blit(img_chara[0], [ch_x, ch_y])
@@ -359,7 +366,7 @@ def main():
             tama()
             tama_2()
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
-            screen.blit(txt_ch_hp, [10, 910])
+            screen.blit(txt_ch_hp, [10, 900])
             ii = 0
             idx = 1
             if level == MAX_LEVEL:
@@ -372,16 +379,22 @@ def main():
                 se_gekiha.play()
 
         elif idx == 7: # クリア
+            font = pygame.font.Font(FONT_PATH, 60)
             screen.blit(img_bg, [0, 0])  # 背景描画
             screen.blit(img_chara[0], [ch_x, ch_y])  # 描画
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
-            screen.blit(txt_ch_hp, [10, 910])
+            screen.blit(txt_ch_hp, [10, 900])
             bs_hp = 0
             if msbx == 0:
                 msbx = 1
             elif msbx == 1:
                 msbx = 2
                 messagebox.showinfo("クリア！", "ゲームをクリアしました。スペースキーまたはエンターキーでもう一回プレイできます。")
+        
+        elif idx == 8: # テキストシステムテスト
+            screen.blit(img_bg, [0, 0])
+            txt_ch_hp = font.render("あいうえお", True, WHITE)
+            screen.blit(txt_ch_hp, [10, 900])
 
         pygame.display.update()
         clock.tick(30)
