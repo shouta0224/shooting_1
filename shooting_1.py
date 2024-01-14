@@ -3,12 +3,14 @@ import sys
 import random
 import math
 from tkinter import messagebox
+import numpy as np
 
 screen = pygame.display.set_mode((1280, 960))  # スクリーン初期化 解像度設定
 
 WHITE = (255, 255, 255)
 
 img_bg = pygame.image.load("img\\bg_space.png")  # 背景画像
+img_tb = pygame.image.load("img\\textbox.png") # テキストボックス
 img_chara = [pygame.image.load("img\ch_bird_1.png"),  # 主人公の画像
              pygame.image.load("img\ch_bird_2.png"),
              pygame.image.load("img\ch_bird_died.png")
@@ -16,9 +18,10 @@ img_chara = [pygame.image.load("img\ch_bird_1.png"),  # 主人公の画像
 img_tama = pygame.image.load("img\\tama.png")  # 弾の画像
 img_tama_2 = pygame.image.load("img\\tama_2.png")  # 弾の画像
 img_boss = [pygame.image.load("img\\boss_1.png")]
+img_speaker = [pygame.image.load("img\\sp_kari.png")] # テキストボックスのキャラ
 
 tmr = 0  # 時間管理変数
-idx = 0
+idx = 0 # 0
 ch_x = 565  # 主人公のX座標 初期化
 ch_y = 810  # 同じくY座標
 ch_hp_max = 10
@@ -49,6 +52,23 @@ bs_fight = 0
 level = 0
 ii = 0
 MAX_LEVEL = 2
+FONT_PATH = "fnt/ipaexg.ttf"
+sinario_num = 0
+is_press_enter = 0 #文字送りのキーを押しているか
+is_pull_enter = 1
+
+
+TXT_CHA = [ # テキストボックスシステムのキャラをまとめたリスト
+    ["鳥", 0] # 左がキャラの名前。右がキャラの画像の番号。img_speakerに対応している。
+]
+
+SINARIO = [ # シナリオ。テキストファイルで管理できたらうれしい 
+    ["やあ。僕は鳥だよ。", 0], # 左が喋る内容。右がキャラクターID。TXT_CHAに対応。
+    ["へえ、キミも鳥なんだ。", 0],
+    ["全くそういうふうにあ見えないけどね。", 0],
+    ["お前が鳥を名乗るな。ぶち殺してやる。", 0],
+    ["ここ入れないとなんかバグる。長さにも入れろ。(boss.sn)", 0]
+]
 
 def control():  # 主人公の操作
     global ch_x, ch_y, ta_utsu
@@ -73,13 +93,13 @@ def control():  # 主人公の操作
         if ch_x < 0:
             while ch_x < 0:
                 ch_x = ch_x + 1
-    ta_utsu = (ta_utsu + 1) * key[pygame.K_z]  # 弾を打つ
+    ta_utsu = (ta_utsu + 1) * key[pygame.K_SPACE]  # 弾を打つ(スペースキー)
     if ta_utsu % 5 == 1:
         ta_utsu = 1
 
 
 def event():
-    global idx, ta_utsu
+    global idx, ta_utsu, is_press_enter, is_pull_enter
     pygame.event.pump()  # よくわからん。おまじないらしい。
     key = pygame.key.get_pressed()  # キーが押されているかを取得
     for event in pygame.event.get():  # WIndowのバツボタンが押されたとき
@@ -87,8 +107,17 @@ def event():
             pygame.quit()
             sys.exit()
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+            if event.key == pygame.K_RETURN: #エンターでリセット
                 idx = 0
+            if event.key == pygame.K_z: # Zで文字送り
+                is_press_enter = 1
+#            else:
+#                is_press_enter = 0
+#                is_pull_enter = 1
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_z: # Zで文字送り
+                is_press_enter = 0
+                is_pull_enter = 1
 
 
 def tama(): # 敵の弾
@@ -179,16 +208,26 @@ def tama_2(): # 主人公の弾
 
 
 class Boss:
-    def __init__(self, id, hp, size_x, size_y):
+    def __init__(self, id, hp, size_x, size_y, sinario_ichi, sinario_nagasa):
         self.id = id
         self.hp = hp
         self.sx = size_x
         self.sy = size_y
+        self.si = sinario_ichi
+        self.sn = sinario_nagasa
 
     def rdy(self):  # ボスの準備
         global bs_x, bs_y, bs_hp, bs_hp_max
         bs_x = 640 - (self.sx / 2)
         bs_y = -self.sy + ((self.sy / 30) * ii)
+        bs_hp = self.hp
+        bs_hp_max = self.hp
+        screen.blit(img_boss[self.id - 1], [bs_x, bs_y])
+
+    def sinariochu(self):
+        global bs_x, bs_y, bs_hp, bs_hp_max
+        bs_x = 640 - (self.sx / 2)
+        bs_y = -self.sy + (self.sy)
         bs_hp = self.hp
         bs_hp_max = self.hp
         screen.blit(img_boss[self.id - 1], [bs_x, bs_y])
@@ -224,6 +263,7 @@ def main():
     global ta_2_x, ta_2_y, TA_2_KAZU, ta_utsu
     global gmov, msbx, ATARIHANTEI_X, ATARIHANTEI_Y
     global bs_x, bs_y, bs_fight, bs_hp, bs_hp_max
+    global sinario_num, is_press_enter, is_pull_enter
     pygame.init()  # 初期化
     pygame.display.set_caption("シューティング")  # Windowのタイトル
     clock = pygame.time.Clock()  # clockオブジェクト
@@ -299,7 +339,7 @@ def main():
             txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
             screen.blit(txt_ch_hp, [10, 910])
             if level == 1:
-                boss = Boss(level, 80, 300, 200)
+                boss = Boss(level, 80, 300, 200, 0, 5)
             ii = 0
             boss.rdy()
             idx = 4
@@ -325,7 +365,8 @@ def main():
             ii = ii + 1
             boss.rdy()
             if ii == 30:
-                idx = 5
+                ii = 0
+                idx = 8
 
         elif idx == 5:  # ボスの攻撃！
             ta_kakuritsu = 5
@@ -381,6 +422,67 @@ def main():
             elif msbx == 1:
                 msbx = 2
                 messagebox.showinfo("クリア！", "ゲームをクリアしました。スペースキーまたはエンターキーでもう一回プレイできます。")
+
+        elif idx == 8: #攻撃ターンとおしゃべりターンの切り替え
+            ta_kakuritsu = 0
+            screen.blit(img_bg, [0, 0])  # 背景描画
+            bs_fight = 0
+            control()
+
+            if tmr % 30 < 15:  # 主人公描画 15フレーム(0.5秒)ごとにアニメーション
+                screen.blit(img_chara[0], [ch_x, ch_y])
+            else:
+                screen.blit(img_chara[1], [ch_x, ch_y])
+            
+            tama()
+            boss.sinariochu()
+            
+
+            txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
+            screen.blit(txt_ch_hp, [10, 910])
+            txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
+            screen.blit(txt_bs_hp, [10, 10])
+
+            sinario_num = boss.si
+
+            ii = ii + 1
+            if ii == 30:
+                ii = 0
+                idx = 9
+        elif idx == 9: #ボスが話す
+            print(str(is_press_enter)+", "+str(is_pull_enter))
+            if is_press_enter == 1 and is_pull_enter == 1:
+                sinario_num += 1
+                ii += 1
+                is_pull_enter = 0
+            if ii == boss.sn-1:
+                idx = 5
+            else:
+                font = pygame.font.Font(FONT_PATH, 50)
+                ta_kakuritsu = 0
+                screen.blit(img_bg, [0, 0])  # 背景描画
+                bs_fight = 0
+                
+                if tmr % 30 < 15:  # 主人公描画 15フレーム(0.5秒)ごとにアニメーション
+                    screen.blit(img_chara[0], [ch_x, ch_y])
+                else:
+                    screen.blit(img_chara[1], [ch_x, ch_y])
+
+                tama()
+                boss.sinariochu()
+
+                txt_ch_hp = font.render("HP:{}/{}".format(ch_hp, ch_hp_max), True, WHITE)
+                screen.blit(txt_ch_hp, [10, 910])
+                txt_bs_hp = font.render("BOSS HP:{}/{}".format(bs_hp, bs_hp_max), True, WHITE)
+                screen.blit(txt_bs_hp, [10, 10])
+
+                
+                screen.blit(img_tb, [60, 570])
+                screen.blit(img_speaker[TXT_CHA[SINARIO[sinario_num][1]][1]], [90, 660])
+                txt_name = font.render(TXT_CHA[SINARIO[sinario_num][1]][0], True, WHITE)
+                screen.blit(txt_name, [124, 579])
+                txt_main = font.render(SINARIO[sinario_num][0], True, WHITE)
+                screen.blit(txt_main, [340, 660])
 
         pygame.display.update()
         clock.tick(30)
