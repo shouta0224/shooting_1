@@ -51,12 +51,15 @@ bs_hp_max = 0
 bs_fight = 0
 level = 0
 ii = 0
-MAX_LEVEL = 2
+MAX_LEVEL = 1
 FONT_PATH = "fnt/ipaexg.ttf"
 sinario_num = 0
 is_press_enter = 0 #文字送りのキーを押しているか
 is_pull_enter = 1
+#ZandEnter = 0
 
+ta_utsu_Z = 0
+ta_utsu_enter = 0
 
 TXT_CHA = [ # テキストボックスシステムのキャラをまとめたリスト
     ["鳥", 0] # 左がキャラの名前。右がキャラの画像の番号。img_speakerに対応している。
@@ -66,12 +69,12 @@ SINARIO = [ # シナリオ。テキストファイルで管理できたらうれ
     ["やあ。僕は鳥だよ。", 0], # 左が喋る内容。右がキャラクターID。TXT_CHAに対応。
     ["へえ、キミも鳥なんだ。", 0],
     ["全くそういうふうにあ見えないけどね。", 0],
-    ["お前が鳥を名乗るな。ぶち殺してやる。", 0],
-    ["ここ入れないとなんかバグる。長さにも入れろ。(boss.sn)", 0]
+    ["お前が鳥を名乗るな。", 0],
+    ["ここ入れないとなんかバグる。長さにも入れる。(boss.sn)", 0]
 ]
 
 def control():  # 主人公の操作
-    global ch_x, ch_y, ta_utsu
+    global ch_x, ch_y, ta_utsu, ta_utsu_Z, ta_utsu_enter
     key = pygame.key.get_pressed()
     if key[pygame.K_UP]:
         ch_y = ch_y - CH_SPD
@@ -93,13 +96,23 @@ def control():  # 主人公の操作
         if ch_x < 0:
             while ch_x < 0:
                 ch_x = ch_x + 1
-    ta_utsu = (ta_utsu + 1) * key[pygame.K_SPACE]  # 弾を打つ(スペースキー)
+    ta_utsu_Z = (ta_utsu + 1) * key[pygame.K_z] # 弾を打つ
+    ta_utsu_enter = (ta_utsu + 1) * key[pygame.K_RETURN]
+    if not ta_utsu_Z == 0:
+        ta_utsu = ta_utsu_Z
+    elif not ta_utsu_enter == 0:
+        ta_utsu = ta_utsu_enter
+    else:
+        ta_utsu = 0
     if ta_utsu % 5 == 1:
         ta_utsu = 1
 
 
 def event():
     global idx, ta_utsu, is_press_enter, is_pull_enter
+#    ZandEnter = 0
+    is_press_enter = 0
+    is_pull_enter = 1
     pygame.event.pump()  # よくわからん。おまじないらしい。
     key = pygame.key.get_pressed()  # キーが押されているかを取得
     for event in pygame.event.get():  # WIndowのバツボタンが押されたとき
@@ -107,18 +120,24 @@ def event():
             pygame.quit()
             sys.exit()
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN: #エンターでリセット
+            if event.key == pygame.K_r: # Rでリセット
                 idx = 0
-            if event.key == pygame.K_z: # Zで文字送り
+            if event.key == pygame.K_z or event.key == pygame.K_RETURN: # Zかエンターで文字送り
                 is_press_enter = 1
 #            else:
 #                is_press_enter = 0
 #                is_pull_enter = 1
+
+"""
         if event.type == pygame.KEYUP:
-            if event.key == pygame.K_z: # Zで文字送り
+            if event.key == pygame.K_z or event.key == pygame.K_RETURN: # Zかで文字送り
+                ZandEnter = ZandEnter + 1
+            if ZandEnter == 2:
                 is_press_enter = 0
                 is_pull_enter = 1
+                print("C")
 
+"""
 
 def tama(): # 敵の弾
     global ta_kakuritsu, gmov, idx, screen, ch_hp, ch_hp_max
@@ -322,7 +341,7 @@ def main():
                 msbx = 1
             elif msbx == 1:
                 msbx = 2
-                messagebox.showinfo("ゲームオーバー！", "弾に当たってしまいました。スペースキーまたはエンターキーでもう一回プレイできます。")
+                messagebox.showinfo("ゲームオーバー！", "弾に当たってしまいました。OKを押した後Rキーでもう一回プレイできます。")
 
         elif idx == 3:  # ボス準備
             ta_kakuritsu = 0
@@ -421,7 +440,7 @@ def main():
                 msbx = 1
             elif msbx == 1:
                 msbx = 2
-                messagebox.showinfo("クリア！", "ゲームをクリアしました。スペースキーまたはエンターキーでもう一回プレイできます。")
+                messagebox.showinfo("クリア！", "ゲームをクリアしました。OKを押してRキーでもう一回プレイできます。")
 
         elif idx == 8: #攻撃ターンとおしゃべりターンの切り替え
             ta_kakuritsu = 0
@@ -446,11 +465,10 @@ def main():
             sinario_num = boss.si
 
             ii = ii + 1
-            if ii == 30:
+            if ii == 60:
                 ii = 0
                 idx = 9
         elif idx == 9: #ボスが話す
-            print(str(is_press_enter)+", "+str(is_pull_enter))
             if is_press_enter == 1 and is_pull_enter == 1:
                 sinario_num += 1
                 ii += 1

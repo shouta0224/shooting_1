@@ -1,1 +1,1 @@
-pyinstaller shooting_1.py --onefile –iimg\icon.ico
+pyinstaller shooting_1.py --onefile
